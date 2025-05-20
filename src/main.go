@@ -33,9 +33,10 @@ func main() {
 
 	// the line below tells the Go HTTP server to listen for HTTP requests on the /create-payment path, and when the request arrives, call the handleCreatePayment function
 	http.HandleFunc("/create-payment", handleCreatePayment)
+	http.HandleFunc("/health", healtCheck)
 	log.Println("Listening on port 8080")
 	var err error = http.ListenAndServe("localhost:8080", nil)
-	if err !=nil{
+	if err != nil {
 		log.Fatal(err)
 	}
 	// var names [] string = []string {"John", "Doe"}
@@ -50,15 +51,15 @@ func main() {
 
 // function that runs in case a request comes through the create-payment route
 // w is used to send a response back to the client while r contains info about the incoming HTTP req
-func handleCreatePayment(w http.ResponseWriter, r *http.Request) {
+func healtCheck(w http.ResponseWriter, r *http.Request) {
 
 	// instead of writing, you see here line 56 how the response variable is assigned a byte array
 	// var response [] byte = []byte ("Server is up and running")
 
 	// one can instead write
-	response := []byte ("Server is up and running")
+	response := []byte("Server is up and running")
 	// the line below means that, w.write expects an int and error to be returned, BUT we don't really care about the int, only the error returned, therefore the _ is used to omit the int being returned, then the err is assigned to the error variable
-	_, err :=w.Write(response)
+	_, err := w.Write(response)
 	if err != nil {
 		// log.Fatal(err)
 		fmt.Println(err)
@@ -66,4 +67,12 @@ func handleCreatePayment(w http.ResponseWriter, r *http.Request) {
 
 	//fprintf writes to the http response w
 	// fmt.Fprintf(w, "Hello, World!")
+}
+
+func handleCreatePayment(w http.ResponseWriter, r *http.Request) {
+
+	if r.Method != "POST" {
+		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+		return
+	}
 }
