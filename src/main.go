@@ -24,6 +24,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/stripe/stripe-go/v74"
 	"log"
 	"net/http"
 )
@@ -100,4 +101,7 @@ func handleCreatePayment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	fmt.Println("incoming request",req)
+	params := &stripe.PaymentIntentParams{
+		
+	}
 }
