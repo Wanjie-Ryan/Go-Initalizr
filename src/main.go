@@ -22,6 +22,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -75,4 +76,28 @@ func handleCreatePayment(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
 	}
+
+	// represents the data coming in from the request
+	var req struct{
+		ProductId string `json:"product_id"`
+		FirstName string `json:"first_name"`
+		LastName string `json:"last_name"`
+		Address1 string `json:"address_1"`
+		Address2 string `json:"address_2"`
+		City string `json:"city"`
+		State string `json:"state"`
+		Zip string `json:"zip"`
+		Country string `json:"country"`
+
+	}
+	// once the request comes in, decode the request body, then assign it to the struct object created there on top
+	// the & sign is a pointer to the struct
+	err :=json.NewDecoder(r.Body).Decode(&req)
+	if err !=nil{
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		fmt.Println("request body error",err)
+		log.Println(err)
+		return
+	}
+	fmt.Println("incoming request",req)
 }
