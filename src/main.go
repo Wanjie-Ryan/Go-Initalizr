@@ -22,11 +22,15 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/stripe/stripe-go/v74"
+	"io"
 	"log"
 	"net/http"
+
+	"github.com/stripe/stripe-go/v74"
+	"github.com/stripe/stripe-go/v74/paymentintent"
 )
 
 //net/http --> package that helps build HTTP servers and clients
@@ -73,35 +77,74 @@ func healtCheck(w http.ResponseWriter, r *http.Request) {
 
 func handleCreatePayment(w http.ResponseWriter, r *http.Request) {
 
+	stripe.Key = "snsdjfdjsfbhbhvksfvsiv"
 	if r.Method != "POST" {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
 	}
 
 	// represents the data coming in from the request
-	var req struct{
+	var req struct {
 		ProductId string `json:"product_id"`
 		FirstName string `json:"first_name"`
-		LastName string `json:"last_name"`
-		Address1 string `json:"address_1"`
-		Address2 string `json:"address_2"`
-		City string `json:"city"`
-		State string `json:"state"`
-		Zip string `json:"zip"`
-		Country string `json:"country"`
-
+		LastName  string `json:"last_name"`
+		Address1  string `json:"address_1"`
+		Address2  string `json:"address_2"`
+		City      string `json:"city"`
+		State     string `json:"state"`
+		Zip       string `json:"zip"`
+		Country   string `json:"country"`
 	}
 	// once the request comes in, decode the request body, then assign it to the struct object created there on top
 	// the & sign is a pointer to the struct
-	err :=json.NewDecoder(r.Body).Decode(&req)
-	if err !=nil{
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		fmt.Println("request body error",err)
+		fmt.Println("request body error", err)
 		log.Println(err)
 		return
 	}
-	fmt.Println("incoming request",req)
+	fmt.Println("incoming request", req)
 	params := &stripe.PaymentIntentParams{
-		
+		Amount:                  stripe.Int64(calculateOrderAmount(req.ProductId)),
+		Currency:                stripe.String(string(stripe.CurrencyUSD)),
+		AutomaticPaymentMethods: &stripe.PaymentIntentAutomaticPaymentMethodsParams{Enabled: stripe.Bool(true)},
 	}
+
+	paymentIntent, err := paymentintent.New(params)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
+	fmt.Println("payment intent", paymentIntent.ClientSecret)
+
+	var response struct {
+		ClientSecret string `json:"client_secret"`
+	}
+
+	response.ClientSecret = paymentIntent.ClientSecret
+	var buf bytes.Buffer
+	err = json.NewEncoder(&buf).Encode(response)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+
+	}
+	w.Header().Set("Content-Type", "application/json")
+	_, err = io.Copy(w, &buf)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+}
+
+func calculateOrderAmount(productId string) int64 {
+	switch productId {
+	case "pants":
+		return 1000
+	case "shoes":
+		return 2000
+	default:
+		return 0
+	}
+
 }
