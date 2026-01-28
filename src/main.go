@@ -44,6 +44,7 @@ func main() {
 	var err error = http.ListenAndServe("localhost:8080", nil)
 	if err != nil {
 		log.Fatal(err)
+		fmt.printf("my days")
 	}
 	// var names [] string = []string {"John", "Doe"}
 	// fmt.Println(names)
