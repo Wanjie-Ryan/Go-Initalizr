@@ -45,6 +45,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 		fmt.printf("my days")
+		log.printf("my")
 	}
 	// var names [] string = []string {"John", "Doe"}
 	// fmt.Println(names)
